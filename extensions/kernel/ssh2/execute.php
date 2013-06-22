@@ -43,7 +43,7 @@ if(!defined('LIBVALOA_SSH2_USERNAME'))             { define('LIBVALOA_SSH2_USERN
 if(!defined('LIBVALOA_SSH2_PASSWORD'))             { define('LIBVALOA_SSH2_PASSWORD', ''); }
 if(!defined('LIBVALOA_SSH2_STDERR_STREAM'))        { define('LIBVALOA_SSH2_STDERR_STREAM', 0); }
  
-class System_Execute {
+class SSH2_Execute {
 
 	private $command, $connection;
 

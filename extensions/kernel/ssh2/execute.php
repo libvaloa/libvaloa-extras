@@ -56,7 +56,6 @@ class SSH2_Execute {
 		$this->connection = ssh2_connect(
 			LIBVALOA_AUTH_SSH2_HOSTNAME,
 			LIBVALOA_AUTH_SSH2_PORT);
-						
 
 		switch(LIBVALOA_SSH2_KEY_BASED_AUTH) {
 			case 1:

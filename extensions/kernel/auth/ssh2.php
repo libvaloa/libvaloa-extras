@@ -57,7 +57,7 @@ class Auth_SSH2 implements Auth_IFace, Auth_PWResetIFace {
 
 	}
 
-	public function authentication($user, $pass) {
+	public function authenticate($user, $pass) {
 		return (bool) ssh2_auth_password($this->connection, $user, $pass);
 	}
 

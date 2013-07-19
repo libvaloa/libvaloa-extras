@@ -61,6 +61,7 @@ if(!defined('LIBVALOA_SSH2_USERNAME'))             { define('LIBVALOA_SSH2_USERN
 if(!defined('LIBVALOA_SSH2_PASSWORD'))             { define('LIBVALOA_SSH2_PASSWORD', ''); }
 if(!defined('LIBVALOA_SSH2_STDERR_STREAM'))        { define('LIBVALOA_SSH2_STDERR_STREAM', 0); }
 if(!defined('LIBVALOA_SSH2_DEFAULT_CHMOD'))        { define('LIBVALOA_SSH2_DEFAULT_CHMOD', 0644); }
+if(!defined('LIBVALOA_SSH2_USE_STREAM'))           { define('LIBVALOA_SSH2_USE_STREAM', 1); }
 
 class SSH2_SCP {
 
@@ -132,6 +133,15 @@ class SSH2_SCP {
 		$this->send();
 	}
 
+	public function unlinkRemoteFile() {
+		if(!$this->connection) {
+			// Open SSH connection
+			$this->openSSHConnection();
+		}
+		$sftp = ssh2_sftp($this->connection);
+		return ssh2_sftp_unlink($sftp, $this->remoteFile);
+	}
+
 	private function recv() {
 		if(!$this->connection) {
 			// Open SSH connection
@@ -142,8 +152,33 @@ class SSH2_SCP {
 			throw new InvalidArgumentException("local target file not set - set this first with setLocalTempFile(path).");
 		}
 
+		switch(LIBVALOA_SSH2_USE_STREAM) {
+			case 1:
+				$sftp = ssh2_sftp($this->connection);
+				$tmp = $this->remoteFile;
+				$stream = @fopen("ssh2.sftp://{$sftp}{$tmp}", "r");
+				if(!$stream) {
+					throw new UnexpectedValueException("Could not open file: {$this->remoteFile}");
+				}
+
+				$size = filesize("ssh2.sftp://$sftp$this->remoteFile");
+				$contents = "";
+				$read = 0;
+				$len = $size;
+				while ($read < $len && ($buf = fread($stream, $len - $read))) {
+					$read += strlen($buf);
+					$contents .= $buf;
+				}    
+				file_put_contents ($this->localTempFile, $contents);
+				@fclose($stream);
+
+				break;
+			default:
+				ssh2_scp_recv($this->connection, $this->remoteFile, $this->localTempFile);
+				
+		}		
+
 		// transfers might get truncated if connection isn't closed propely
-		ssh2_scp_recv($this->connection, $this->remoteFile, $this->localTempFile);
 		ssh2_exec($this->connection, 'exit');
 		$this->connection = false;
 
